@@ -23,7 +23,7 @@ async function fetchData() {
     // Convert name to tag format
     const tag = input.toLowerCase().replace(/\s+/g, '-');
 
-    // Fetch tag ID
+    // Fetch tag ID and count
     const tagResponse = await fetch(
       `https://malayalamsubtitles.org/wp-json/wp/v2/tags?search=${tag}`
     );
@@ -33,49 +33,59 @@ async function fetchData() {
     }
 
     const tagData = await tagResponse.json();
-    if (tagData.length === 0) {
+
+    // Filter tags for exact match
+    const matchingTags = tagData.filter(tag => tag.name.toLowerCase() === input.toLowerCase());
+
+    if (matchingTags.length === 0) {
       throw new Error("അക്ഷരം വല്ലതും തെറ്റിപ്പോയോ? ഈ പേര് സൈറ്റില്‍ ഇല്ലല്ലോ.");
     }
 
-    const { id: tagId } = tagData[0];
+    const { id: tagId, count: totalPostsCount } = matchingTags[0]; // Use the exact match tag ID and count
 
-    // Fetch posts with the tag
-    const postsResponse = await fetch(
-      `https://malayalamsubtitles.org/wp-json/wp/v2/posts?tags=${tagId}&per_page=100`
-    );
-
-    if (!postsResponse.ok) {
-      throw new Error("Failed to fetch posts data");
-    }
-
-    const posts = await postsResponse.json();
+    // Calculate the total number of pages
+    const perPage = 100;
+    const totalPages = Math.ceil(totalPostsCount / perPage);
 
     let totalDownloads = 0;
     let mostDownloaded = { title: "None", downloads: 0 };
     const results = [];
 
-    for (const post of posts) {
-      const contentHtml = post.content?.rendered || "";
-      const match = contentHtml.match(/wpdmdl=(\d+)/);
-      const downloadId = match ? match[1] : null;
+    // Fetch posts across multiple pages if there are more than 100 posts
+    for (let page = 1; page <= totalPages; page++) {
+      const postsResponse = await fetch(
+        `https://malayalamsubtitles.org/wp-json/wp/v2/posts?tags=${tagId}&per_page=${perPage}&page=${page}`
+      );
 
-      if (downloadId) {
-        const downloadResponse = await fetch(
-          `https://malayalamsubtitles.org/wp-json/wpdm/v1/packages/${downloadId}`
-        );
+      if (!postsResponse.ok) {
+        throw new Error("Failed to fetch posts data");
+      }
 
-        if (downloadResponse.ok) {
-          const downloadData = await downloadResponse.json();
-          const downloadCount = downloadData.download_count || 0;
-          totalDownloads += downloadCount;
+      const posts = await postsResponse.json();
 
-          results.push({
-            title: post.title.rendered,
-            downloads: downloadCount,
-          });
+      for (const post of posts) {
+        const contentHtml = post.content?.rendered || "";
+        const match = contentHtml.match(/wpdmdl=(\d+)/);
+        const downloadId = match ? match[1] : null;
 
-          if (downloadCount > mostDownloaded.downloads) {
-            mostDownloaded = { title: post.title.rendered, downloads: downloadCount };
+        if (downloadId) {
+          const downloadResponse = await fetch(
+            `https://malayalamsubtitles.org/wp-json/wpdm/v1/packages/${downloadId}`
+          );
+
+          if (downloadResponse.ok) {
+            const downloadData = await downloadResponse.json();
+            const downloadCount = downloadData.download_count || 0;
+            totalDownloads += downloadCount;
+
+            results.push({
+              title: post.title.rendered,
+              downloads: downloadCount,
+            });
+
+            if (downloadCount > mostDownloaded.downloads) {
+              mostDownloaded = { title: post.title.rendered, downloads: downloadCount };
+            }
           }
         }
       }
