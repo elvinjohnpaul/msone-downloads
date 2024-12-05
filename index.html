@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <script src="trnas_count.js" defer></script>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Translator Download Count</title>
+    <!-- Import Fonts -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manjari:wght@100;400;700&family=Roboto:wght@400;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      /* General Styles */
+      body {
+        font-family: "Manjari", "Roboto", Arial, sans-serif;
+        background: linear-gradient(135deg, #e8f0fd, #ffffff);
+        color: #333;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+
+      h1 {
+        text-align: center;
+        color: #007bff;
+      }
+
+      .container {
+        background-color: #fff;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      }
+
+      .input-group {
+        margin-bottom: 20px;
+        text-align: center;
+      }
+
+      input {
+        padding: 10px;
+        margin-right: 10px;
+        width: 60%;
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        font-size: 1em;
+      }
+
+      button {
+        padding: 10px 20px;
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-size: 1em;
+        transition: background 0.3s ease;
+      }
+
+      button:hover {
+        background: linear-gradient(135deg, #0056b3, #003d80);
+      }
+
+      .loading {
+        text-align: center;
+        color: #007bff;
+        font-size: 1.2em;
+        margin: 20px 0;
+        display: none;
+      }
+
+      .loading-circle {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid #007bff;
+        border-top: 3px solid transparent;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+        margin-left: 10px;
+      }
+
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* Key Metrics */
+      .summary {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+
+      .summary-item {
+        font-size: 1.2em;
+        font-weight: bold;
+        color: #007bff;
+        margin: 10px 0;
+      }
+
+      /* Table Styles */
+      .table-container {
+        margin-top: 20px;
+        overflow-x: auto; /* Horizontal scroll for small screens */
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+        font-size: 0.9em;
+      }
+
+      table th,
+      table td {
+        padding: 10px;
+        text-align: left;
+        border: 1px solid #ddd;
+      }
+
+      table th {
+        background-color: #007bff;
+        color: white;
+        cursor: pointer;
+        position: sticky;
+        top: 0; /* Sticky header */
+      }
+
+      table th:hover {
+        background-color: #0056b3;
+      }
+
+      table tr:nth-child(even) {
+        background-color: #f9f9f9;
+      }
+
+      table tr:hover {
+        background-color: #f1f1f1;
+      }
+
+      /* Footer */
+      footer {
+        text-align: center;
+        margin-top: 30px;
+        font-size: 0.9em;
+        color: #555;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>📊 Msone Translator Download Count</h1>
+      <div class="input-group">
+        <input
+          type="text"
+          id="inputValue"
+          placeholder="Enter translator name"
+        />
+        <button onclick="fetchData()">Get Details</button>
+      </div>
+      <div class="loading" id="loadingMessage">
+        ⚙️ അനിയാ നില്‍! ഞാനീ ഡാറ്റ ഒന്ന് എടുത്തോട്ടെ...
+        <span class="loading-circle"></span>
+      </div>
+      <div class="summary">
+        <div id="totalDownloads" class="summary-item"></div>
+        <div id="mostDownloaded" class="summary-item"></div>
+      </div>
+      <div class="table-container">
+        <table>
+          <thead>
+            <tr>
+              <th onclick="sortTable(0)">No.</th>
+              <th onclick="sortTable(1)">📜 Subtitle</th>
+              <th onclick="sortTable(2)">📊 Download Count</th>
+            </tr>
+          </thead>
+          <tbody id="resultsTable">
+            <!-- Results will be dynamically inserted here -->
+          </tbody>
+        </table>
+      </div>
+      <div class="error" id="errorMessage"></div>
+    </div>
+    <footer>
+      Made with ❤️ for Msoniers
+    </footer>
+  </body>
+</html>
