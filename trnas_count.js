@@ -1,3 +1,14 @@
+function formatNumberIndian(number) {
+  const numberString = number.toString();
+  const lastThreeDigits = numberString.slice(-3);
+  const otherDigits = numberString.slice(0, -3);
+  const formattedNumber = otherDigits
+    ? otherDigits.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + "," + lastThreeDigits
+    : lastThreeDigits;
+  return formattedNumber;
+}
+
+
 async function fetchData() {
   const input = document.getElementById("inputValue").value.trim();
   const loadingMessage = document.getElementById("loadingMessage");
@@ -105,7 +116,7 @@ async function fetchData() {
     // Wait for all download fetches to complete concurrently
     await Promise.all(downloadPromises);
 
-    totalDownloadsElement.textContent = `${input}'s Total Downloads: ${totalDownloads}`;
+    totalDownloadsElement.textContent = `${input}'s Total Downloads: ${formatNumberIndian(totalDownloads)}`;
     mostDownloadedElement.textContent = `${input}'s Most Downloaded Subtitle: ${mostDownloaded.title}`;
 
     // Sort the results in descending order based on download count
