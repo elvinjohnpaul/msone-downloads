@@ -38,10 +38,10 @@ async function fetchData() {
     const matchingTags = tagData.filter(tag => tag.name.toLowerCase() === input.toLowerCase());
 
     if (matchingTags.length === 0) {
-      throw new Error("അക്ഷരം വല്ലതും തെറ്റിപ്പോയോ? ഈ പേര് സൈറ്റിലെ ടാഗിലുള്ള പോലെ പേരടിക്കണം.");
+      throw new Error("Tag not found! Ensure the name matches exactly.");
     }
 
-    const { id: tagId, count: totalPostsCount } = matchingTags[0]; // Use the exact match tag ID and count
+    const { id: tagId, count: totalPostsCount } = matchingTags[0];
 
     // Calculate the total number of pages
     const perPage = 100;
@@ -107,6 +107,9 @@ async function fetchData() {
 
     totalDownloadsElement.textContent = `${input}'s Total Downloads: ${totalDownloads}`;
     mostDownloadedElement.textContent = `${input}'s Most Downloaded Subtitle: ${mostDownloaded.title}`;
+
+    // Sort the results in descending order based on download count
+    results.sort((a, b) => b.downloads - a.downloads);
 
     results.forEach((item, index) => {
       const row = `<tr>
