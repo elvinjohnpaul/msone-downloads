@@ -51,45 +51,59 @@ async function fetchData() {
     let mostDownloaded = { title: "None", downloads: 0 };
     const results = [];
 
-    // Fetch posts across multiple pages if there are more than 100 posts
+    // Create a list of promises for fetching posts across multiple pages
+    const postFetchPromises = [];
+
     for (let page = 1; page <= totalPages; page++) {
-      const postsResponse = await fetch(
+      postFetchPromises.push(fetch(
         `https://malayalamsubtitles.org/wp-json/wp/v2/posts?tags=${tagId}&per_page=${perPage}&page=${page}`
-      );
-
-      if (!postsResponse.ok) {
-        throw new Error("Failed to fetch posts data");
-      }
-
-      const posts = await postsResponse.json();
-
-      for (const post of posts) {
-        const contentHtml = post.content?.rendered || "";
-        const match = contentHtml.match(/wpdmdl=(\d+)/);
-        const downloadId = match ? match[1] : null;
-
-        if (downloadId) {
-          const downloadResponse = await fetch(
-            `https://malayalamsubtitles.org/wp-json/wpdm/v1/packages/${downloadId}`
-          );
-
-          if (downloadResponse.ok) {
-            const downloadData = await downloadResponse.json();
-            const downloadCount = downloadData.download_count || 0;
-            totalDownloads += downloadCount;
-
-            results.push({
-              title: post.title.rendered,
-              downloads: downloadCount,
-            });
-
-            if (downloadCount > mostDownloaded.downloads) {
-              mostDownloaded = { title: post.title.rendered, downloads: downloadCount };
-            }
-          }
+      ).then(postsResponse => {
+        if (!postsResponse.ok) {
+          throw new Error("Failed to fetch posts data");
         }
-      }
+        return postsResponse.json();
+      }));
     }
+
+    // Wait for all post fetches to complete concurrently
+    const allPosts = await Promise.all(postFetchPromises);
+
+    // Flatten the posts array from all pages
+    const posts = allPosts.flat();
+
+    // Fetch download counts for all posts concurrently
+    const downloadPromises = posts.map(post => {
+      const contentHtml = post.content?.rendered || "";
+      const match = contentHtml.match(/wpdmdl=(\d+)/);
+      const downloadId = match ? match[1] : null;
+
+      if (downloadId) {
+        return fetch(
+          `https://malayalamsubtitles.org/wp-json/wpdm/v1/packages/${downloadId}`
+        ).then(downloadResponse => {
+          if (downloadResponse.ok) {
+            return downloadResponse.json();
+          } else {
+            return { download_count: 0 };
+          }
+        }).then(downloadData => {
+          const downloadCount = downloadData.download_count || 0;
+          totalDownloads += downloadCount;
+
+          results.push({
+            title: post.title.rendered,
+            downloads: downloadCount,
+          });
+
+          if (downloadCount > mostDownloaded.downloads) {
+            mostDownloaded = { title: post.title.rendered, downloads: downloadCount };
+          }
+        });
+      }
+    });
+
+    // Wait for all download fetches to complete concurrently
+    await Promise.all(downloadPromises);
 
     totalDownloadsElement.textContent = `${input}'s Total Downloads: ${totalDownloads}`;
     mostDownloadedElement.textContent = `${input}'s Most Downloaded Subtitle: ${mostDownloaded.title}`;
