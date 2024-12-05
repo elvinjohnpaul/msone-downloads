@@ -8,7 +8,6 @@ function formatNumberIndian(number) {
   return formattedNumber;
 }
 
-
 async function fetchData() {
   const input = document.getElementById("inputValue").value.trim();
   const loadingMessage = document.getElementById("loadingMessage");
@@ -31,28 +30,36 @@ async function fetchData() {
   }
 
   try {
-    // Convert name to tag format
-    const tag = input.toLowerCase().replace(/\s+/g, '-');
+    // Sanitize input
+    const sanitizedInput = input.trim();
+    const tag = sanitizedInput.toLowerCase().replace(/\s+/g, '-');
 
-    // Fetch tag ID and count
+    // Log the generated tag
+    console.log("Generated tag:", tag);
+
+    // Fetch tag data from API
     const tagResponse = await fetch(
       `https://malayalamsubtitles.org/wp-json/wp/v2/tags?search=${tag}`
     );
 
     if (!tagResponse.ok) {
+      console.error("API error:", await tagResponse.text());
       throw new Error("Failed to fetch tag data");
     }
 
     const tagData = await tagResponse.json();
+    console.log("API response:", tagData);
 
-    // Filter tags for exact match
-    const matchingTags = tagData.filter(tag => tag.name.toLowerCase() === input.toLowerCase());
+    // Filter for an exact match using the slug
+    const matchingTags = tagData.filter(tagItem => tagItem.slug === tag);
 
     if (matchingTags.length === 0) {
       throw new Error("Tag not found! Ensure the name matches exactly.");
     }
 
+    // Extract tag ID and post count
     const { id: tagId, count: totalPostsCount } = matchingTags[0];
+    console.log("Tag ID:", tagId, "Total Posts:", totalPostsCount);
 
     // Calculate the total number of pages
     const perPage = 100;
