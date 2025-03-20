@@ -124,7 +124,7 @@ async function fetchData() {
     await Promise.all(downloadPromises);
 
     totalDownloadsElement.textContent = `${input}'s Total Downloads: ${formatNumberIndian(totalDownloads)}`;
-    mostDownloadedElement.textContent = `${input}'s Most Downloaded Subtitle: ${mostDownloaded.title}`;
+    mostDownloadedElement.textContent = `Most Downloaded Subtitle: ${mostDownloaded.title}`;
 
     // Sort the results in descending order based on download count
     results.sort((a, b) => b.downloads - a.downloads);
